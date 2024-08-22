@@ -2,18 +2,38 @@
 
 typedef enum { left = -1, right = 1 } directions;
 
-void enemiesHandling(Rectangle *enemy, const float playerSize,
-                     directions *enemiesDirection) {
-  enemy->x += *enemiesDirection * 2.f; // The speed
+typedef struct {
+  float size;
+  Rectangle body;
+  float speed;
+} player;
 
-  // Make it bounce baby
-  if (enemy->x > GetScreenWidth() - playerSize) {
-    *enemiesDirection = left;
-  } else if (enemy->x < 0) {
-    *enemiesDirection = right;
+typedef struct {
+  Rectangle array[48];
+  unsigned int enemiesPerRow;
+  unsigned int number;
+  bool moveDown;
+  directions direction;
+} enemies;
+
+// TODO: Make the enemies shoot
+void enemiesHandling(enemies *enemies, const float size, unsigned int i) {
+  if (enemies->moveDown) {
+    enemies->array[i].y += 10.f;
+  } else {
+    enemies->array[i].x += enemies->direction * 2.f; // The speed
   }
 
-  DrawRectangleRec(*enemy, WHITE);
+  // Make it bounce baby
+  if (enemies->array[i].x > GetScreenWidth() - size) {
+    enemies->direction = left;
+    enemies->moveDown = !enemies->moveDown;
+  } else if (enemies->array[i].x < 0) {
+    enemies->direction = right;
+    enemies->moveDown = !enemies->moveDown;
+  }
+
+  DrawRectangleRec(enemies->array[i], WHITE);
 }
 
 int main(void) {
@@ -21,53 +41,52 @@ int main(void) {
   InitWindow(800, 450, "Space Invaders (clone)");
   SetTargetFPS(60);
 
-  const float playerSpeed = 4.f;
-  const float playerSize = 20.f;
-  Rectangle player = {GetScreenWidth() / 2.f - playerSize,
-                      GetScreenHeight() - 100.f, playerSize, playerSize};
+  player player = {20.f,
+                   {GetScreenWidth() / 2.f - player.size,
+                    GetScreenHeight() - 100.f, player.size, player.size},
+                   4.f};
 
-  const unsigned int enemiesNumber = 48;
-  const unsigned int enemiesPerRow = 12;
-  directions enemiesDirection = right;
-  Rectangle enemies[enemiesNumber];
+  enemies enemies = {{{0}}, 12, 48, false, right};
 
-  for (unsigned int i = 0; i < enemiesNumber; i++) {
+  for (unsigned int i = 0; i < enemies.number; i++) {
     if (i == 0) {
-      enemies[i] = (Rectangle){10.f, 10.f, playerSize, playerSize};
+      enemies.array[i] = (Rectangle){10.f, 10.f, player.size, player.size};
     } else {
-      enemies[i] = (Rectangle){enemies[i - 1].x + playerSize + 10,
-                               enemies[i - 1].y, playerSize, playerSize};
+      enemies.array[i] =
+          (Rectangle){enemies.array[i - 1].x + player.size + 10,
+                      enemies.array[i - 1].y, player.size, player.size};
     }
 
-    if (i % enemiesPerRow == 0 && i != 0) {
-      enemies[i].x = 10.f;
-      enemies[i].y = enemies[i - 1].y + playerSize + 10.f;
+    if (i % enemies.enemiesPerRow == 0 && i != 0) {
+      enemies.array[i].x = 10.f;
+      enemies.array[i].y = enemies.array[i - 1].y + player.size + 10.f;
     }
   }
 
   // Game loop
   while (!WindowShouldClose()) {
     // Event handling
+    // TODO: Make the player shoot
     if (IsKeyDown(KEY_A)) {
-      player.x -= playerSpeed;
+      player.body.x -= player.speed;
     }
     if (IsKeyDown(KEY_D)) {
-      player.x += playerSpeed;
+      player.body.x += player.speed;
     }
 
     // Player dege collision
-    if (player.x < 0) {
-      player.x = 0;
-    } else if (player.x > GetScreenWidth() - playerSize) {
-      player.x = GetScreenWidth() - playerSize;
+    if (player.body.x < 0) {
+      player.body.x = 0;
+    } else if (player.body.x > GetScreenWidth() - player.size) {
+      player.body.x = GetScreenWidth() - player.size;
     }
 
     // Drawing
     BeginDrawing();
     ClearBackground(BLACK);
-    DrawRectangleRec(player, GREEN);
-    for (unsigned int i = 0; i < enemiesNumber; i++) {
-      enemiesHandling(&enemies[i], playerSize, &enemiesDirection);
+    DrawRectangleRec(player.body, GREEN);
+    for (unsigned int i = 0; i < enemies.number; i++) {
+      enemiesHandling(&enemies, player.size, i);
     }
     EndDrawing();
   }
