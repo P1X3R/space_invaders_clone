@@ -2,19 +2,18 @@
 
 typedef enum { left = -1, right = 1 } directions;
 
-void enemiesHandling(Rectangle *enemies, const unsigned int enemiesNumber,
-                     const float playerSize, directions enemiesDirection) {
-  for (unsigned int i = 0; i < enemiesNumber; i++) {
-    enemies[i].x += enemiesDirection;
+void enemiesHandling(Rectangle *enemy, const float playerSize,
+                     directions *enemiesDirection) {
+  enemy->x += *enemiesDirection * 2.f; // The speed
 
-    if (enemies[i].x > GetScreenWidth() - playerSize) {
-      enemiesDirection = left;
-    } else if (enemies[i].x < 0) {
-      enemiesDirection = right;
-    }
-
-    DrawRectangleRec(enemies[i], WHITE);
+  // Make it bounce baby
+  if (enemy->x > GetScreenWidth() - playerSize) {
+    *enemiesDirection = left;
+  } else if (enemy->x < 0) {
+    *enemiesDirection = right;
   }
+
+  DrawRectangleRec(*enemy, WHITE);
 }
 
 int main(void) {
@@ -67,7 +66,9 @@ int main(void) {
     BeginDrawing();
     ClearBackground(BLACK);
     DrawRectangleRec(player, GREEN);
-    enemiesHandling(enemies, enemiesNumber, playerSize, enemiesDirection);
+    for (unsigned int i = 0; i < enemiesNumber; i++) {
+      enemiesHandling(&enemies[i], playerSize, &enemiesDirection);
+    }
     EndDrawing();
   }
 
