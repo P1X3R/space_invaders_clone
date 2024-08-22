@@ -41,6 +41,13 @@ int main(void) {
       player.x += player_speed;
     }
 
+    // Player dege collision
+    if (player.x < 0) {
+      player.x = 0;
+    } else if (player.x > GetScreenWidth() - player_size) {
+      player.x = GetScreenWidth() - player_size;
+    }
+
     // Drawing
     BeginDrawing();
     ClearBackground(BLACK);
