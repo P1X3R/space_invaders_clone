@@ -1,4 +1,5 @@
 #include "raylib.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
@@ -12,6 +13,7 @@ typedef struct {
 
 typedef struct {
   Rectangle array[48];
+  Rectangle bullets[48];
   unsigned int enemiesPerRow, number;
   bool moveDown;
   directions direction;
@@ -20,6 +22,7 @@ typedef struct {
 void initializingLoop(enemies *enemies, player *player, float bulletsDefaultY,
                       float bulletsSize) {
   for (unsigned int i = 0; i < enemies->number; i++) {
+    // Initialize enemies
     if (i == 0) {
       enemies->array[i] = (Rectangle){10.f, 10.f, player->size, player->size};
     } else {
@@ -27,12 +30,17 @@ void initializingLoop(enemies *enemies, player *player, float bulletsDefaultY,
           (Rectangle){enemies->array[i - 1].x + player->size + 10,
                       enemies->array[i - 1].y, player->size, player->size};
     }
+    // Create bullets
+    enemies->bullets[i] =
+        (Rectangle){enemies->array[i].x, GetScreenHeight(), 2.f, bulletsSize};
 
+    // Move the enemies to another row every 12 enemies
     if (i % enemies->enemiesPerRow == 0 && i != 0) {
       enemies->array[i].x = 10.f;
       enemies->array[i].y = enemies->array[i - 1].y + player->size + 10.f;
     }
 
+    // Create the player bullets
     if (i < player->bulletNumber) {
       player->bullets[i] =
           (Rectangle){player->body.x, bulletsDefaultY, 2.f, bulletsSize};
@@ -60,13 +68,19 @@ void playerBulletsHandling(player *player, unsigned int i) {
   DrawRectangleRec(player->bullets[i], YELLOW);
 }
 
-// TODO: Make the enemies shoot
+// All in just one loop
 void enemiesHandling(enemies *enemies, player *player, const float size,
                      unsigned int i) {
+  // Move they down
   if (enemies->moveDown) {
     enemies->array[i].y += 10.f;
   } else {
     enemies->array[i].x += enemies->direction * 2.f; // The speed
+  }
+
+  // Move the bullets down
+  if (enemies->bullets[i].y < GetScreenHeight()) {
+    enemies->bullets[i].y += 10.f;
   }
 
   // Make it bounce baby
@@ -78,13 +92,27 @@ void enemiesHandling(enemies *enemies, player *player, const float size,
     enemies->moveDown = !enemies->moveDown;
   }
 
+  // Die when a bullet touch them
   for (unsigned int j = 0; j < player->bulletNumber; j++) {
     if (CheckCollisionRecs(enemies->array[i], player->bullets[j])) {
-      enemies->array[i].y = -1200;
+      enemies->array[i].y = GetScreenHeight() + 20000;
       player->bullets[j].y = -9;
     }
   }
 
+  // Make them shoot
+  if (rand() % 500 == 1 && enemies->array[i].y != GetScreenHeight() + 20000 &&
+      enemies->bullets[i].y == GetScreenHeight()) {
+    enemies->bullets[i].y = enemies->array[i].y;
+    enemies->bullets[i].x = enemies->array[i].x;
+  }
+
+  // Check collision with the player
+  if (CheckCollisionRecs(enemies->bullets[i], player->body)) {
+    CloseWindow(); // Idk why this returns a SIGSEGV, but it doesn't matter
+  }
+
+  DrawRectangleRec(enemies->bullets[i], RED);
   DrawRectangleRec(enemies->array[i], WHITE);
 }
 
@@ -105,7 +133,7 @@ int main(void) {
       5                           // Bullet number
   };
 
-  enemies enemies = {{{0}}, 12, 48, false, right};
+  enemies enemies = {{{0}}, {{0, 0, 0, 0}}, 12, 48, false, right};
 
   initializingLoop(&enemies, &player, bulletsDefaultY, bulletsSize);
 
