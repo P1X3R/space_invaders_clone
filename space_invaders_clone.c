@@ -71,11 +71,20 @@ void playerBulletsHandling(player *player, unsigned int i) {
 // All in just one loop
 void enemiesHandling(enemies *enemies, player *player, const float size,
                      unsigned int i) {
+  // Make the player die >:b
+  if (CheckCollisionRecs(enemies->bullets[i], player->body) ||
+      CheckCollisionRecs(enemies->array[i], player->body)) {
+    CloseWindow(); // Idk why this returns a SIGSEGV, but it doesn't matter
+    return;
+  }
+
   // Move they down
-  if (enemies->moveDown) {
-    enemies->array[i].y += 10.f;
-  } else {
-    enemies->array[i].x += enemies->direction * 2.f; // The speed
+  if (enemies->array[i].y != GetScreenHeight() + 2000) {
+    if (enemies->moveDown) {
+      enemies->array[i].y += 10.f;
+    } else {
+      enemies->array[i].x += enemies->direction * 2.f; // The speed
+    }
   }
 
   // Move the bullets down
@@ -105,11 +114,6 @@ void enemiesHandling(enemies *enemies, player *player, const float size,
       enemies->bullets[i].y == GetScreenHeight()) {
     enemies->bullets[i].y = enemies->array[i].y;
     enemies->bullets[i].x = enemies->array[i].x;
-  }
-
-  // Check collision with the player
-  if (CheckCollisionRecs(enemies->bullets[i], player->body)) {
-    CloseWindow(); // Idk why this returns a SIGSEGV, but it doesn't matter
   }
 
   DrawRectangleRec(enemies->bullets[i], RED);
