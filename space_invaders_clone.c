@@ -1,4 +1,6 @@
 #include "raylib.h"
+#include <stdlib.h>
+#include <time.h>
 
 typedef enum { left = -1, right = 1 } directions;
 
@@ -59,7 +61,8 @@ void playerBulletsHandling(player *player, unsigned int i) {
 }
 
 // TODO: Make the enemies shoot
-void enemiesHandling(enemies *enemies, const float size, unsigned int i) {
+void enemiesHandling(enemies *enemies, player *player, const float size,
+                     unsigned int i) {
   if (enemies->moveDown) {
     enemies->array[i].y += 10.f;
   } else {
@@ -75,6 +78,13 @@ void enemiesHandling(enemies *enemies, const float size, unsigned int i) {
     enemies->moveDown = !enemies->moveDown;
   }
 
+  for (unsigned int j = 0; j < player->bulletNumber; j++) {
+    if (CheckCollisionRecs(enemies->array[i], player->bullets[j])) {
+      enemies->array[i].y = -1200;
+      player->bullets[j].y = -9;
+    }
+  }
+
   DrawRectangleRec(enemies->array[i], WHITE);
 }
 
@@ -82,6 +92,7 @@ int main(void) {
   // Initialize
   InitWindow(800, 450, "Space Invaders (clone)");
   SetTargetFPS(60);
+  srand(time(NULL));
 
   const float bulletsSize = 10.f;
   const float bulletsDefaultY = bulletsSize * -1;
@@ -124,7 +135,7 @@ int main(void) {
 
     for (unsigned int i = 0; i < enemies.number; i++) {
       playerBulletsHandling(&player, i);
-      enemiesHandling(&enemies, player.size, i);
+      enemiesHandling(&enemies, &player, player.size, i);
     }
 
     DrawRectangleRec(player.body, GREEN);
