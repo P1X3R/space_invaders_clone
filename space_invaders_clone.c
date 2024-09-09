@@ -73,7 +73,7 @@ void enemiesHandling(enemies *enemies, player *player, const float size,
   // Make the player die >:b
   if (CheckCollisionRecs(enemies->bullets[i], player->body) ||
       CheckCollisionRecs(enemies->array[i], player->body)) {
-    CloseWindow(); // Idk why this returns a SIGSEGV, but it doesn't matter
+    CloseWindow(); // I don't know why this returns core dumped, but it doesn't matter
     return;
   }
 
@@ -153,7 +153,7 @@ int main(void) {
       shoot(&player);
     }
 
-    // Player dege collision
+    // Player edge collision
     if (player.body.x < 0) {
       player.body.x = 0;
     } else if (player.body.x > GetScreenWidth() - player.size) {
@@ -173,7 +173,6 @@ int main(void) {
     EndDrawing();
   }
 
-  // Uninitialize
   CloseWindow();
 
   return 0;
